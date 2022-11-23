@@ -80,10 +80,10 @@ export async function run() {
 
     if (hasTag) {
       console.log(await exec('pwd'));
-      const previousTagSha = (
-        await exec(`git rev-list --tags=${tagPrefix}* --topo-order --max-count=1`)
-      ).stdout.trim();
-      tag = (await exec(`git describe --tags ${previousTagSha}`)).stdout.trim();
+
+      // fetch previous tag and its sha
+      tag = (await exec(`git tag --list '${tagPrefix}*' --sort=-version:refname --merged|head -1`)).stdout.trim();
+      const previousTagSha = (await exec(`git rev-list --topo-order --max-count=1 '${tag}'`)).stdout.trim();
       logs = (
         await exec(
           `git log ${tag}..HEAD --pretty=format:'%s%n%b${SEPARATOR}' --abbrev-commit`
