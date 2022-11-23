@@ -128,6 +128,7 @@ function prepare(rev, branch) {
 }
 
 function prepareMockRepo() {
+    fs.rmdirSync("tmp", {recursive: true});
     if (!fs.existsSync("tmp")) {
         fs.mkdirSync("tmp");
     }
