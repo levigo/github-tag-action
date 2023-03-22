@@ -1,7 +1,6 @@
 import * as core from "@actions/core";
 import { exec as _exec } from "@actions/exec";
-import { context } from "@actions/github";
-import { Octokit } from "@octokit/rest";
+import { context, getOctokit } from "@actions/github";
 import semver, { ReleaseType } from "semver";
 import { analyzeCommits } from "./myCommitAnalyzer";
 import { generateNotes } from "@semantic-release/release-notes-generator";
@@ -184,9 +183,8 @@ export async function run() {
       return;
     }
 
-    const octokit = new Octokit({
-      auth: "${{ secrets.GITHUB_TOKEN }}",
-    });
+    const githubToken = core.getInput('github_token')
+    const octokit = getOctokit(githubToken)
 
     if (createAnnotatedTag === "true") {
       core.debug(`Creating annotated tag`);
