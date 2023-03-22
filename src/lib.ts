@@ -1,10 +1,10 @@
 import * as core from "@actions/core";
 import { exec as _exec } from "@actions/exec";
-import { context, GitHub } from "@actions/github";
+import { context } from "@actions/github";
+import { Octokit } from "@octokit/rest";
 import semver, { ReleaseType } from "semver";
 import { analyzeCommits } from "./myCommitAnalyzer";
 import { generateNotes } from "@semantic-release/release-notes-generator";
-
 const SEPARATOR = "==============================================";
 
 async function exec(command: string, args?: string[]) {
@@ -184,12 +184,14 @@ export async function run() {
       return;
     }
 
-    const octokit = new GitHub(core.getInput("github_token"));
+    const octokit = new Octokit({
+      auth: "${{ secrets.GITHUB_TOKEN }}",
+    });
 
     if (createAnnotatedTag === "true") {
       core.debug(`Creating annotated tag`);
 
-      const tagCreateResponse = await octokit.git.createTag({
+      const tagCreateResponse = await octokit.rest.git.createTag({
         ...context.repo,
         tag: newTag,
         message: newTag,
@@ -199,7 +201,7 @@ export async function run() {
 
       core.debug(`Pushing annotated tag to the repo`);
 
-      await octokit.git.createRef({
+      await octokit.rest.git.createRef({
         ...context.repo,
         ref: `refs/tags/${newTag}`,
         sha: tagCreateResponse.data.sha
@@ -209,7 +211,7 @@ export async function run() {
 
     core.debug(`Pushing new tag to the repo`);
 
-    await octokit.git.createRef({
+    await octokit.rest.git.createRef({
       ...context.repo,
       ref: `refs/tags/${newTag}`,
       sha: GITHUB_SHA
@@ -218,7 +220,9 @@ export async function run() {
 	// fetch tags (again)
 	core.info("Fetching generated tag");
 	await exec("git fetch --tags");
-  } catch (error) {
-    core.setFailed(error.message);
+  } catch (fetchError) {
+    if(fetchError instanceof Error) {
+      core.setFailed(fetchError.message);
+    }
   }
 }
