@@ -94,3 +94,7 @@ typings/
 .dynamodb/
 
 tmp
+
+# exclude IntelliJ IDEA files
+.idea
+**/*.iml
